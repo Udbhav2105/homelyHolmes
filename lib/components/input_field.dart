@@ -4,11 +4,13 @@ import 'package:homely_holmes/services/app_color.dart';
 class InputField extends StatelessWidget {
   final String inputText;
   final TextEditingController controller;
+  final VoidCallback onSubmit;
 
   const InputField({
     super.key,
     required this.inputText,
     required this.controller,
+    required this.onSubmit,
   });
 
   @override
@@ -32,15 +34,12 @@ class InputField extends StatelessWidget {
         labelStyle: const TextStyle(
           color: AppColor.secondaryColor,
         ),
-        floatingLabelStyle: TextStyle(
+        floatingLabelStyle: const TextStyle(
           color: AppColor.secondaryColor,
         ),
-        suffixIcon: IconButton(
-          onPressed: () {
-            // Handle the right arrow action
-            print("Right arrow pressed");
-          },
+        suffixIcon: IconButton( onPressed: onSubmit,
           icon: const Icon(Icons.arrow_forward, color: AppColor.secondaryColor), // Correctly wrapped in Icon widget
+
         ),
       ),
     );
