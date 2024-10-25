@@ -9,7 +9,6 @@ import 'dart:io';
 
 class MediaAccessPage extends StatefulWidget {
   const MediaAccessPage({Key? key}) : super(key: key);
-
   @override
   _MediaAccessPageState createState() => _MediaAccessPageState();
 }
@@ -39,25 +38,67 @@ class _MediaAccessPageState extends State<MediaAccessPage> {
     }
   }
 
+  void _removeImage(int index) {
+    setState(() {
+      _images.removeAt(index);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFFf6f4f2),
       appBar: AppBar(
         title: const Text('Media Access Demo'),
+        backgroundColor: Colors.transparent,
       ),
-      // body: ImageGrid(images: _images),
-      body: Column(
-        children: [
-          Expanded(
-            child: ImageGrid(images: _images),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+          child: Column(
+            children: [
+              SizedBox(height: 100),
+              Container(
+                width: double.infinity,
+                constraints: BoxConstraints(
+                  minHeight: 100,
+                  maxHeight: _images.isEmpty ? 100 :
+                  (_images.length <= 3 ? 220 :
+                  _images.length <= 6 ? 400 : 500),
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.white,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
+                  child: Column(
+                    children: [
+                      InputField(
+                        inputText: "enter your desired theme",
+                        controller: inp,
+                      ),
+                      const SizedBox(height: 10),
+                      Expanded(
+                        child: ImageGrid(
+                          images: _images,
+                          onRemove: _removeImage,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                  onPressed: () {},
+                  child: const Text("Click Me")
+              ),
+            ],
           ),
-          InputField(inputText:"enter your desiered theme", controller: inp ),
-          ElevatedButton(onPressed: () {}, child: const Text("Click Me")),
-        ],
+        ),
       ),
       bottomNavigationBar: MediaBottomBar(onPickImage: _pickImage),
     );
   }
 }
-
-// lib/services/permission_service.dart
