@@ -20,26 +20,43 @@ class InputField extends StatelessWidget {
       style: TextStyle(
         color: AppColor.secondaryColor,
       ),
+      onSubmitted: (value) {
+        onSubmit();
+      },
       decoration: InputDecoration(
         filled: true,
-        fillColor: AppColor.backgroundColor,
+        fillColor: const Color(0xFFF6F4F2), // Change this to your desired background color
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(30), // More rounded corners
           borderSide: const BorderSide(
-            color: AppColor.secondaryColor,
-            width: 0,
+            color: Color(0xFF493525), // Border color
+            width: 1.5,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: const BorderSide(
+            color: Color(0xFF493525), // Border color when enabled
+            width: 1.5,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: const BorderSide(
+            color: Color(0xFF493525), // Border color when focused
+            width: 2.0,
           ),
         ),
         labelText: inputText,
         labelStyle: const TextStyle(
-          color: AppColor.secondaryColor,
+          color: Color(0xFF493525), // Label text color
         ),
         floatingLabelStyle: const TextStyle(
-          color: AppColor.secondaryColor,
+          color: Color(0xFF493525), // Floating label color
         ),
-        suffixIcon: IconButton( onPressed: onSubmit,
-          icon: const Icon(Icons.arrow_forward, color: AppColor.secondaryColor), // Correctly wrapped in Icon widget
-
+        suffixIcon: IconButton(
+          onPressed: onSubmit,
+          icon: const Icon(Icons.arrow_forward, color: Color(0xFF493525)), // Correctly wrapped in Icon widget
         ),
       ),
     );

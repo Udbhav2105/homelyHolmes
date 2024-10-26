@@ -152,7 +152,7 @@ class _ImageFilterDemoState extends State<ImageFilterDemo> {
             child: Center(
               child: _buildFilteredImage(
                 Image.asset(
-                  'assets/cold.jpeg',
+                  'assets/cold.jpg',
                   fit: BoxFit.contain,
                 ),
               ),

@@ -46,8 +46,13 @@ dependencies:
   google_generative_ai: ^0.4.6
   http: ^1.1.0
   image: ^4.3.0
+  carousel_slider: ^4.2.1
+  path_provider: ^2.1.1
+  gallery_saver: ^2.3.2
   flutter_image_filters: ^0.0.24
   image_filter_pro: ^0.1.11
+dependency_overrides:
+    http: ^0.13.3
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -72,7 +77,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/cold.jpeg
+    - assets/cold.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

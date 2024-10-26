@@ -67,6 +67,41 @@ class GeminiService {
       rethrow;
     }
   }
+  Future<String> getSong(String prompt) async{
+    try {
+      final requestBody = {
+        'contents': [
+          {
+            'parts': [
+              {
+                'text': prompt + "recommend me 3 songs on the baiss of this (give just three songs nothing else"
+              }
+            ]
+          }
+        ],
+        'generationConfig': {
+          'temperature': 0.7,
+          'topK': 32,
+          'topP': 1,
+          'maxOutputTokens': 4096,
+        }
+      };
+
+      final response = await http.post(
+        Uri.parse('$textEndpoint?key=$apiKey'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        return _extractResponse(jsonDecode(response.body));
+      } else {
+        throw Exception('Failed to get response: ${response.body}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
   Future<String> getCaptions(String prompt) async{
     try {
       final requestBody = {
