@@ -1,144 +1,240 @@
-import 'dart:io';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:path/path.dart' as path;
+import 'package:flutter/material.dart';
+import 'dart:math';
+import 'dart:ui' as ui;
 
-class ImageAnalyzer {
-  final String apiKey;
-  final String apiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+// Image Filters class definition
+class ImageFilters {
+  static ColorFilter sepiaTone() {
+    return const ColorFilter.matrix([
+     0.696, 0.384, 0.094, 0, 0,
+      0.174, 0.843, 0.084, 0, 0,
+      0.136, 0.267, 0.566, 0, 0,
+      0, 0, 0, 1, 0,
+    ]);
+  }
 
-  ImageAnalyzer(this.apiKey);
+  static ColorFilter blackAndWhite() {
+    return const ColorFilter.matrix([
+      0.2126, 0.7152, 0.0722, 0, 0,
+      0.2126, 0.7152, 0.0722, 0, 0,
+      0.2126, 0.7152, 0.0722, 0, 0,
+      0, 0, 0, 1, 0,
+    ]);
+  }
 
-  Future<String> analyzeImage(String imagePath) async {
-    try {
-      // Read and encode image file
-      final File imageFile = File(imagePath);
-      if (!await imageFile.exists()) {
-        throw Exception('Image file not found');
-      }
+  static ColorFilter warmGlow() {
+    return const ColorFilter.matrix([
+      1.2, 0, 0, 0, 0,
+      0, 1.1, 0, 0, 0,
+      0, 0, 0.9, 0, 0,
+      0, 0, 0, 1, 0,
+    ]);
+  }
 
-      final bytes = await imageFile.readAsBytes();
-      final base64Image = base64Encode(bytes);
+  static ColorFilter coolTint() {
+    return const ColorFilter.matrix([
+      0.9, 0, 0, 0, 0,
+      0, 1.0, 0, 0, 0,
+      0, 0, 1.2, 0, 0,
+      0, 0, 0, 1, 0,
+    ]);
+  }
 
-      // Prepare request body
-      final Map<String, dynamic> requestBody = {
-        'contents': [
-          {
-            'parts': [
-              {
-                'text': 'Describe this image in detail'
-              },
-              {
-                'inline_data': {
-                  'mime_type': _getMimeType(imagePath),
-                  'data': base64Image
-                }
-              }
-            ]
-          }
-        ]
-      };
+  static ColorFilter highContrast() {
+    return const ColorFilter.matrix([
+   1.25, 0, 0, 0, -63.75,
+      0, 1.25, 0, 0, -63.75,
+      0, 0, 1.25, 0, -63.75,
+      0, 0, 0, 1, 0,
+    ]);
+  }
+}
 
-      // Make API request
-      final response = await http.post(
-        Uri.parse('$apiEndpoint?key=$apiKey'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(requestBody),
+class VignettePainter extends CustomPainter {
+  final double intensity;
+
+  VignettePainter({this.intensity = 0.5});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint();
+    final Rect rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final RadialGradient gradient = RadialGradient(
+      center: Alignment.center,
+      radius: 1.2,
+      colors: [
+        Colors.transparent,
+        Colors.black.withOpacity(intensity),
+      ],
+    );
+
+    paint.shader = gradient.createShader(rect);
+    canvas.drawRect(rect, paint);
+  }
+
+  @override
+  bool shouldRepaint(VignettePainter oldDelegate) => false;
+}
+
+// Main App
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Image Filter Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const ImageFilterDemo(),
+    );
+  }
+}
+
+class ImageFilterDemo extends StatefulWidget {
+  const ImageFilterDemo({Key? key}) : super(key: key);
+
+  @override
+  _ImageFilterDemoState createState() => _ImageFilterDemoState();
+}
+
+class _ImageFilterDemoState extends State<ImageFilterDemo> {
+  String currentFilter = 'Normal';
+  bool enableVignette = false;
+  bool enableGrain = false;
+
+  Widget _buildFilteredImage(Image image) {
+    Widget processedImage = image;
+
+    // Apply color filters
+    final filters = _getSelectedFilters();
+    for (final filter in filters) {
+      processedImage = ColorFiltered(
+        colorFilter: filter,
+        child: processedImage,
       );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        return _extractDescription(data);
-      } else {
-        throw Exception('API request failed with status ${response.statusCode}: ${response.body}');
-      }
-    } catch (e) {
-      return 'Error analyzing image: $e';
     }
+
+    // Stack effects
+    return Stack(
+      children: [
+        processedImage,
+        if (enableVignette)
+          Positioned.fill(
+            child: CustomPaint(
+              painter: VignettePainter(),
+            ),
+          ),
+        if (enableGrain)
+          Positioned.fill(
+            child: CustomPaint(
+              // painter: VintageGrainPainter(),
+            ),
+          ),
+      ],
+    );
   }
 
-  String _getMimeType(String filePath) {
-    final extension = path.extension(filePath).toLowerCase();
-    switch (extension) {
-      case '.jpg':
-      case '.jpeg':
-        return 'image/jpeg';
-      case '.png':
-        return 'image/png';
-      case '.gif':
-        return 'image/gif';
-      case '.webp':
-        return 'image/webp';
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Image Filter Demo'),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: _buildFilteredImage(
+                Image.asset(
+                  'assets/cold.jpeg',
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // Filter selection dropdown
+                DropdownButton<String>(
+                  value: currentFilter,
+                  isExpanded: true,
+                  items: [
+                    'Normal',
+                    'Sepia',
+                    'Black & White',
+                    'Warm Glow',
+                    'Cool Tint',
+                    'High Contrast',
+                  ].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      currentFilter = newValue!;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                // Effect toggles
+                Row(
+                  children: [
+                    Expanded(
+                      child: CheckboxListTile(
+                        title: const Text('Vignette'),
+                        value: enableVignette,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            enableVignette = value!;
+                          });
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: CheckboxListTile(
+                        title: const Text('Grain'),
+                        value: enableGrain,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            enableGrain = value!;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<ColorFilter> _getSelectedFilters() {
+    switch (currentFilter) {
+      case 'Sepia':
+        return [ImageFilters.sepiaTone()];
+      case 'Black & White':
+        return [ImageFilters.blackAndWhite()];
+      case 'Warm Glow':
+        return [ImageFilters.warmGlow()];
+      case 'Cool Tint':
+        return [ImageFilters.coolTint()];
+      case 'High Contrast':
+        return [ImageFilters.highContrast()];
       default:
-        return 'image/jpeg';
+        return [];
     }
   }
-
-  String _extractDescription(Map<String, dynamic> response) {
-    try {
-      return response['candidates'][0]['content']['parts'][0]['text'];
-    } catch (e) {
-      return 'Unable to extract description from response';
-    }
-  }
-}
-
-class ImageAnalyzerCLI {
-  final ImageAnalyzer analyzer;
-
-  ImageAnalyzerCLI(this.analyzer);
-
-  Future<void> start() async {
-    print('Welcome to Image Analyzer CLI!');
-
-    while (true) {
-      print('\nOptions:');
-      print('1. Analyze an image');
-      print('2. Exit');
-      print('\nEnter your choice (1-2):');
-
-      final choice = stdin.readLineSync()?.trim();
-
-      switch (choice) {
-        case '1':
-          await _handleImageAnalysis();
-          break;
-        case '2':
-          print('Goodbye!');
-          return;
-        default:
-          print('Invalid choice. Please try again.');
-      }
-    }
-  }
-
-  Future<void> _handleImageAnalysis() async {
-    print('\nEnter the path to your image file:');
-    final imagePath = stdin.readLineSync()?.trim();
-
-    if (imagePath == null || imagePath.isEmpty) {
-      print('Invalid path provided.');
-      return;
-    }
-
-    print('\nAnalyzing image...');
-    final description = await analyzer.analyzeImage(imagePath);
-    print('\nImage Analysis Result:');
-    print('--------------------');
-    print(description);
-    print('--------------------');
-  }
-}
-
-void main() async {
-  // Replace with your actual API key
-  const apiKey = 'AIzaSyAdoC69uK73kJMGzIdCBFniY0nMzbgh5Zo'
-  ;
-
-  final analyzer = ImageAnalyzer(apiKey);
-  final cli = ImageAnalyzerCLI(analyzer);
-
-  await cli.start();
 }

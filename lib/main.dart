@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:homely_holmes/screens/screens.dart';
 
-void main() async {
+void main()  {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
   // Load environment variables
-  await dotenv.load(fileName: ".env");
+  // await dotenv.load(fileName: ".env");
 
   runApp(const MyApp());
 }
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: MediaAccessPage(
-        geminiApiKey: dotenv.env['GAPI'],
+        geminiApiKey: 'AIzaSyAdoC69uK73kJMGzIdCBFniY0nMzbgh5Zo',
       ),
     );
   }

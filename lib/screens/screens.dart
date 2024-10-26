@@ -282,14 +282,31 @@ class _MediaAccessPageState extends State<MediaAccessPage> {
           try {
             // Get analysis from Gemini
             final analysis = await _geminiService.analyzeImage(image);
-
+            final tags = await _geminiService.getHashtags(analysis);
+            final vibe = await _geminiService.getVibe(analysis);
+            final captions = await _geminiService.getCaptions(analysis);
             // Add response message
             setState(() {
-              _messages.add(Message(
-                text: analysis,
-                isResponse: true,
-              ));
+              _messages.addAll([
+                Message(
+                  text: analysis,
+                  isResponse: true,
+                ),
+                Message(
+                  text: vibe,
+                  isResponse: true,
+                ),
+                Message(
+                  text: tags,
+                  isResponse: true,
+                ),
+                Message(
+                  text: captions,
+                  isResponse: true,
+                ),
+              ]);
             });
+
           } catch (e) {
             _showError('Error analyzing image: $e');
             setState(() {

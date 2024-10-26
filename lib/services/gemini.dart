@@ -1,3 +1,4 @@
+// services/gemini_service.dart
 
 import 'dart:convert';
 import 'dart:io';
@@ -6,35 +7,33 @@ import 'package:path/path.dart' as path;
 
 class GeminiService {
   final String apiKey;
-  final String apiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  final String visionEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  final String textEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
   GeminiService({required this.apiKey});
 
+
   Future<String> analyzeImage(File imageFile) async {
     try {
-      // Verify file exists
       if (!await imageFile.exists()) {
         throw Exception('Image file does not exist: ${imageFile.path}');
       }
 
-      // Check file size (Gemini has a 4MB limit)
       final fileSize = await imageFile.length();
       if (fileSize > 4 * 1024 * 1024) {
         throw Exception('Image file too large. Maximum size is 4MB');
       }
 
-      // Read and encode image
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
       final mimeType = _getMimeType(imageFile.path);
 
-      // Prepare request
       final requestBody = {
         'contents': [
           {
             'parts': [
               {
-                'text': 'Please describe this image in detail. What do you see?'
+                'text': 'Provide a concise summary of the image that mentions the elements/objects of image ,the sentiment analysis of image(vibe, mood, happy, sad , expressions, emotions), the aesthetic of image( vintage, old, modern, hitech, etc). give raw text without any extra symbols'
               },
               {
                 'inline_data': {
@@ -53,20 +52,159 @@ class GeminiService {
         }
       };
 
-      // Make request
       final response = await http.post(
-        Uri.parse('$apiEndpoint?key=$apiKey'),
+        Uri.parse('$visionEndpoint?key=$apiKey'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );
 
       if (response.statusCode == 200) {
-        return _extractDescription(jsonDecode(response.body));
+        return _extractResponse(jsonDecode(response.body));
       } else {
         throw Exception('Failed to analyze image: ${response.body}');
       }
     } catch (e) {
-      rethrow; // Let the UI handle the error
+      rethrow;
+    }
+  }
+  Future<String> getCaptions(String prompt) async{
+    try {
+      final requestBody = {
+        'contents': [
+          {
+            'parts': [
+              {
+                'text': prompt + "Apply analysis and suggest 4 one liner captions"
+              }
+            ]
+          }
+        ],
+        'generationConfig': {
+          'temperature': 0.7,
+          'topK': 32,
+          'topP': 1,
+          'maxOutputTokens': 4096,
+        }
+      };
+
+      final response = await http.post(
+        Uri.parse('$textEndpoint?key=$apiKey'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        return _extractResponse(jsonDecode(response.body));
+      } else {
+        throw Exception('Failed to get response: ${response.body}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+  Future<String> getVibe(String prompt) async{
+    try {
+      final requestBody = {
+        'contents': [
+          {
+            'parts': [
+              {
+                'text': prompt + "Apply analysis and summarise it in 2 sentences"
+              }
+            ]
+          }
+        ],
+        'generationConfig': {
+          'temperature': 0.7,
+          'topK': 32,
+          'topP': 1,
+          'maxOutputTokens': 4096,
+        }
+      };
+
+      final response = await http.post(
+        Uri.parse('$textEndpoint?key=$apiKey'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        return _extractResponse(jsonDecode(response.body));
+      } else {
+        throw Exception('Failed to get response: ${response.body}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+  Future<String> getHashtags(String prompt) async{
+    try {
+      final requestBody = {
+        'contents': [
+          {
+            'parts': [
+              {
+                'text': prompt + "Apply analysis and suggest popular hashtags"
+              }
+            ]
+          }
+        ],
+        'generationConfig': {
+          'temperature': 0.7,
+          'topK': 32,
+          'topP': 1,
+          'maxOutputTokens': 4096,
+        }
+      };
+
+      final response = await http.post(
+        Uri.parse('$textEndpoint?key=$apiKey'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        return _extractResponse(jsonDecode(response.body));
+      } else {
+        throw Exception('Failed to get response: ${response.body}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+  Future<String> getTextResponse(String prompt) async {
+    try {
+      final requestBody = {
+        'contents': [
+          {
+            'parts': [
+              {
+                'text': prompt
+              }
+            ]
+          }
+        ],
+        'generationConfig': {
+          'temperature': 0.7,
+          'topK': 32,
+          'topP': 1,
+          'maxOutputTokens': 4096,
+        }
+      };
+
+      final response = await http.post(
+        Uri.parse('$textEndpoint?key=$apiKey'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        return _extractResponse(jsonDecode(response.body));
+      } else {
+        throw Exception('Failed to get response: ${response.body}');
+      }
+    } catch (e) {
+      rethrow;
     }
   }
 
@@ -85,7 +223,7 @@ class GeminiService {
     }
   }
 
-  String _extractDescription(Map<String, dynamic> response) {
+  String _extractResponse(Map<String, dynamic> response) {
     try {
       return response['candidates'][0]['content']['parts'][0]['text'];
     } catch (e) {
