@@ -74,7 +74,7 @@ class GeminiService {
           {
             'parts': [
               {
-                'text': prompt + "Apply analysis and suggest 4 one liner captions"
+                'text': prompt + "Apply analysis and suggest 2 one liner captions"
               }
             ]
           }
@@ -109,7 +109,7 @@ class GeminiService {
           {
             'parts': [
               {
-                'text': prompt + "Apply analysis and summarise it in 2 sentences"
+                'text': prompt + "(in the beginning write hey looks like you got or something like that) Apply analysis and summarise it in 2 sentences"
               }
             ]
           }
@@ -144,7 +144,7 @@ class GeminiService {
           {
             'parts': [
               {
-                'text': prompt + "Apply analysis and suggest popular hashtags"
+                'text': prompt + "Apply analysis and suggest popular hashtags (only give me hashtag and nothing other than that)"
               }
             ]
           }
@@ -179,7 +179,7 @@ class GeminiService {
           {
             'parts': [
               {
-                'text': prompt
+                'text': "Remember you are my chat bot keep that in mind and keep your messages limited in that way and more like a chat bot but never show that i have explicitly told you to do so "+prompt
               }
             ]
           }

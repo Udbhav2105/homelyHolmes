@@ -237,6 +237,7 @@ class _MediaAccessPageState extends State<MediaAccessPage> {
     _geminiService = GeminiService(apiKey: widget.geminiApiKey);
   }
 
+  // Add the missing _pickImage method
   Future<void> _pickImage(ImageSource source) async {
     try {
       final File? image = await _mediaService.pickImage(source);
@@ -250,6 +251,7 @@ class _MediaAccessPageState extends State<MediaAccessPage> {
     }
   }
 
+  // Add the missing _showError method
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -263,10 +265,30 @@ class _MediaAccessPageState extends State<MediaAccessPage> {
     try {
       // Handle text message
       if (inp.text.trim().isNotEmpty) {
+        final userMessage = inp.text.trim();
+
+        // Add user message to the list first
         setState(() {
-          _messages.add(Message(text: inp.text));
+          _messages.add(Message(
+            text: userMessage,
+            isResponse: false,
+          ));
           inp.clear();
         });
+
+        try {
+          // Get response from Gemini
+          final res = await _geminiService.getTextResponse(userMessage);
+          setState(() {
+            _messages.add(Message(
+              text: res,
+              isResponse: true,
+            ));
+          });
+        } catch (e) {
+          print('Error getting Gemini response: $e');
+          _showError('Failed to get AI response');
+        }
       }
 
       // Handle images
@@ -276,7 +298,7 @@ class _MediaAccessPageState extends State<MediaAccessPage> {
         for (var image in _images) {
           // Add image message
           setState(() {
-            _messages.add(Message(image: image, isImage: true));
+            _messages.add(Message(image: image, isImage: true, isResponse: false));
           });
 
           try {
@@ -285,28 +307,24 @@ class _MediaAccessPageState extends State<MediaAccessPage> {
             final tags = await _geminiService.getHashtags(analysis);
             final vibe = await _geminiService.getVibe(analysis);
             final captions = await _geminiService.getCaptions(analysis);
-            // Add response message
+
+            // Add response messages
             setState(() {
               _messages.addAll([
-                Message(
-                  text: analysis,
-                  isResponse: true,
-                ),
                 Message(
                   text: vibe,
                   isResponse: true,
                 ),
                 Message(
-                  text: tags,
+                  text: "Here's some Hashtags that you might find interesting\n$tags",
                   isResponse: true,
                 ),
                 Message(
-                  text: captions,
+                  text: "Here are some captions for you\n$captions",
                   isResponse: true,
                 ),
               ]);
             });
-
           } catch (e) {
             _showError('Error analyzing image: $e');
             setState(() {
@@ -389,7 +407,6 @@ class _MediaAccessPageState extends State<MediaAccessPage> {
     super.dispose();
   }
 }
-
 // Extracted widgets for better organization
 class MessageBubble extends StatelessWidget {
   final Message message;
